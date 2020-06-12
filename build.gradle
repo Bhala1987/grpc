@@ -1,0 +1,77 @@
+repositories {
+    mavenCentral()
+    jcenter()
+}
+
+buildscript {
+    repositories {
+        mavenLocal()
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.10'
+        classpath("net.serenity-bdd:serenity-gradle-plugin:2.2.1")
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+apply plugin: 'net.serenity-bdd.aggregator'
+apply plugin: 'maven-publish'
+apply plugin: 'groovy'
+apply plugin: 'com.google.protobuf'
+
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+configurations.all {
+    resolutionStrategy {
+        force "io.cucumber:cucumber-core:4.8.0"
+    }
+}
+
+dependencies {
+    // gRPC
+    compile 'io.grpc:grpc-netty-shaded:1.28.0'
+    compile 'io.grpc:grpc-protobuf:1.28.0'
+    compile 'io.grpc:grpc-stub:1.28.0'
+    compile "io.grpc:grpc-services:1.28.0"
+
+    // https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-util
+    compile group: 'org.eclipse.jetty', name: 'jetty-util', version: '9.4.28.v20200408'
+
+    // Serenity
+    // https://mvnrepository.com/artifact/net.serenity-bdd/serenity-junit
+    compile group: 'net.serenity-bdd', name: 'serenity-junit', version: '2.2.1'
+    // https://mvnrepository.com/artifact/net.serenity-bdd/serenity-gradle-plugin
+    compile group: 'net.serenity-bdd', name: 'serenity-gradle-plugin', version: '2.2.1'
+    // https://mvnrepository.com/artifact/net.serenity-bdd/serenity-reports
+    compile group: 'net.serenity-bdd', name: 'serenity-reports', version: '2.2.1'
+}
+
+test {
+    testLogging.showStandardStreams = true
+    maxParallelForks = Runtime.runtime.availableProcessors()
+}
+
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:3.11.0"
+    }
+    plugins {
+        grpc {
+            artifact = 'io.grpc:protoc-gen-grpc-java:1.28.0'
+        }
+    }
+    generateProtoTasks {
+        all()*.plugins {
+            grpc {}
+        }
+    }
+}
+
+gradle.startParameter.continueOnFailure = true
+
+test.finalizedBy(aggregate)
